@@ -1,6 +1,35 @@
 const express = require('express') // 引入express
-
+const nunjucks  = require('nunjucks');
+const path = require('path');
 const app = express(); //  创建一个express实例
+
+// 如果需要在req当中读取cookies 就需要安装 cookie-parser  npm  i cookie-parse --save
+const cookieParser = require('cookie-parser')
+app.use(cookieParser()) // 使用cookie解析器
+
+// 安装cookie-session  npm i cookie-session 
+const cookieSession = require('cookie-session');
+app.use(cookieSession({
+    name:'session', // 保存到客户端的cookie的name
+    secret:'123456', // 加密密匙
+    maxAge: 24*60*60*1000, // 过期时长
+}))
+
+
+// 设置静态文件
+// 指定一个 assets目录放置静态文件
+// app.use(expres.static('assets')) // 访问从根开始 xxxx:3000/index.css
+app.use('/abc',express.static('assets')); //从 xxx:3000/abc/index.css
+
+
+// 设置模板引擎
+app.set('view engine','njk'); 
+// 设置模板放置的目录 __dirname 是node提供的一个全局变量  表示当前文件所谓目录
+app.set('views',path.resolve(__dirname,'./views'));
+
+// 对于nunjuck进行配置
+nunjucks.configure('views',{autoescape:true,express:app});
+
 const router = express.Router() // 创建一个Router实例
 const UserRouter = require('./user')
 
@@ -74,10 +103,50 @@ app.use((req,res,next)=>{
 
 app.use('/user',UserRouter);
 
+app.get('/tt',(req,res)=>{
+      const _d = new Date();
+      _d.setSeconds(_d.getSeconds()+60)
+      res.cookie('abc',456,{
+        expires: _d, // 约定cookie到期时间
+        path: '/tt', // 约定cookie的课访问路径
+        httpOnly: true,
+         // httpOnly 是否值允许请求的时候对cookie进行操作 不允许js去操作这个cookie
+      })
+      res.send('ok')
+})
 
 
+app.use('/ttread',(req,res)=>{
+  console.log(req.cookies);
+  res.end()
+})
 
 
+app.get('/ss',(req,res)=>{
+
+  // req.session.view = 1; // 设置一个session的值
+  req.session.view =  (req.session.view || 0 ) + 1
+  res.send('ok 您过去的24小时内访问的次数为'+req.session.view)
+})
+
+app.get('/ssread',(req,res)=>{
+  // 通过req.session 也可以读取session
+  console.log('session',req.session)
+   res.send('ok')
+})
+
+
+app.get('/login',(req,res)=>{
+
+  req.session.username = 'dixon'
+  res.send('login ok')
+})
+
+app.get('/other',(req,res)=>{
+
+  if(!req.session.username) return res.send('请先登录')
+  res.send('欢迎'+req.session.username+'回来')
+})
 
 
 

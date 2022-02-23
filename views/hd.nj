@@ -1,0 +1,6 @@
+<h1>我是头部</h1>
+<ul>
+  {% for item in nav %}
+  <li>  {{ item.name }} </li>
+  {% endfor %}
+</ul>
