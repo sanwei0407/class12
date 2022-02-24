@@ -1,11 +1,93 @@
 const express = require('express') // 引入express
 const { render } = require('express/lib/response')
 const router = express.Router() // 创建一个Router实例
+const User = require('./models/user')
+const util = require('utility')
+
+/* curd操作 */
+
+router.post('/add',async (req,res)=>{
+
+     const { userName,phone,addr,pwd } = req.body;
+
+     if(!userName ) return res.send({success:false,info:'用户名不能为空'})
+
+
+     try { 
+
+         const u = await User.create({
+           userName,
+           phone,
+           addr,
+          //  pwd: util.md5(pwd) // 中端局
+         })
+         // 高端局
+         await User.findByIdAndUpdate(u.id,{
+           pwd: util.md5(pwd + u.createdAt.getTime() )
+         })
+
+          res.send({success:true,info:'创建成功'})
+
+     } catch (e) {
+        
+         res.send({success:false,info:'用户创建失败'})
+     }
+
+
+
+
+
+
+   
+})
+
+router.post('/delete', async (req,res)=>{
+
+    //  await  User.deleteOne({userName:'dixon' })  // 指定添加删除1个
+    //  await User.deleteMany({userName:'dixon'}) // 指定条件删除多个
+    await User.findByIdAndRemove('6216ee5d2bc428742e726844')
+     
+     res.send({success:true,info:'删除成功'})
+
+})
+
+router.post('/update', async (req,res)=>{
+  // await User.updateMany(更新谁，更新什么);
+  //  await User.updateOne( {userName:'dixon'} , {
+  //     userName:'superDixon',
+  //     phone:'12345' })
+   
+  await User.findByIdAndUpdate('6216ef3c24a391d49f34ef75',{
+    phone:'1111111'
+  })
+  res.send({success:true,info:'update is ok'})
+})
+
+router.post('/getone',async (req,res)=>{
+
+    // const u = await User.findOne({
+    //   phone:'1111111'
+    // })
+
+    const u = await User.findById('6216ef3a24a391d49f34ef73');
+    res.send({success:true,data:u})
+})
+
+router.post('/getall', async (req,res)=>{
+  // User.find(找的条件,过滤字段)
+  // 过滤字段的写法1  ['userName','phone']
+  // 过滤字段的写法2  {userName:0,phone:1}
+   const u = await User.find({
+     userName:'dixon'
+   }, {userName:0,phone:0});
+    res.send({success:true,data:u})
+})
 
 
 router.use('/login',(req,res)=>{
   console.log('处理用户登录')
 })
+
 router.use('/reg',(req,res)=>{
   console.log('处理用户注册')
 })

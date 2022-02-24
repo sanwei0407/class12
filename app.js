@@ -3,6 +3,10 @@ const nunjucks  = require('nunjucks');
 const path = require('path');
 const app = express(); //  创建一个express实例
 
+// 建立与数据库的操作
+
+const db = require('./db')
+
 // 如果需要在req当中读取cookies 就需要安装 cookie-parser  npm  i cookie-parse --save
 const cookieParser = require('cookie-parser')
 app.use(cookieParser()) // 使用cookie解析器
@@ -31,7 +35,8 @@ app.set('views',path.resolve(__dirname,'./views'));
 nunjucks.configure('views',{autoescape:true,express:app});
 
 const router = express.Router() // 创建一个Router实例
-const UserRouter = require('./user')
+const UserRouter = require('./user');
+const req = require('express/lib/request');
 
 // express 当中使用自带的json方法和urlencoded方法来解析body内容
 app.use(express.urlencoded({ extended: false })) // urlencoded
@@ -108,7 +113,7 @@ app.get('/tt',(req,res)=>{
       _d.setSeconds(_d.getSeconds()+60)
       res.cookie('abc',456,{
         expires: _d, // 约定cookie到期时间
-        path: '/tt', // 约定cookie的课访问路径
+        path: '/abc', // 约定cookie的课访问路径
         httpOnly: true,
          // httpOnly 是否值允许请求的时候对cookie进行操作 不允许js去操作这个cookie
       })
@@ -121,6 +126,9 @@ app.use('/ttread',(req,res)=>{
   res.end()
 })
 
+app.get('/abc',(req,res)=>{
+    res.send('abc')
+})
 
 app.get('/ss',(req,res)=>{
 
