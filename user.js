@@ -2,7 +2,10 @@ const express = require('express') // 引入express
 const { render } = require('express/lib/response')
 const router = express.Router() // 创建一个Router实例
 const User = require('./models/user')
+const Order = require('./models/user')
 const util = require('utility')
+
+
 
 /* curd操作 */
 
@@ -11,7 +14,6 @@ router.post('/add',async (req,res)=>{
      const { userName,phone,addr,pwd } = req.body;
 
      if(!userName ) return res.send({success:false,info:'用户名不能为空'})
-
 
      try { 
 
@@ -26,7 +28,8 @@ router.post('/add',async (req,res)=>{
            pwd: util.md5(pwd + u.createdAt.getTime() )
          })
 
-          res.send({success:true,info:'创建成功'})
+   
+          res.send({success:true,info:'创建成功' })
 
      } catch (e) {
         
@@ -56,9 +59,13 @@ router.post('/update', async (req,res)=>{
   //  await User.updateOne( {userName:'dixon'} , {
   //     userName:'superDixon',
   //     phone:'12345' })
-   
-  await User.findByIdAndUpdate('6216ef3c24a391d49f34ef75',{
-    phone:'1111111'
+
+  console.log('my decode info', req.decode);
+  const  { phone } = req.body;
+  const  { uid } = req.decode;
+    
+  await User.findByIdAndUpdate(uid,{
+    phone
   })
   res.send({success:true,info:'update is ok'})
 })
@@ -84,7 +91,20 @@ router.post('/getall', async (req,res)=>{
 })
 
 
-router.use('/login',(req,res)=>{
+router.use('/login',async (req,res)=>{
+  const { userName,pwd } = req.body;
+  const u = await User.findOne({ userName }) ;
+  if(!u) return res.send({ success:false,info:'用户名或者密码不正确'})
+  const curPwd = util.md5(pwd+ u.createdAt.getTime());
+  console.log('curPwd',curPwd,u.createdAt.getTime(),pwd)
+  console.log('pwd',u.pwd)
+  if(curPwd === u.pwd) {
+    const token = req.sign({uid:u._id});
+    res.send({ success:true,info:'登录成功',token})
+  } else {
+    res.send({ success:false,info:'用户名或者密码不正确 err 4 pwd'})
+
+  }
   console.log('处理用户登录')
 })
 

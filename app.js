@@ -1,7 +1,63 @@
 const express = require('express') // 引入express
 const nunjucks  = require('nunjucks');
 const path = require('path');
+
 const app = express(); //  创建一个express实例
+
+const cors = require('cors') // npm i cors --save
+app.use(cors()) // 解除跨域限制
+
+const jwt = require('jsonwebtoken');
+app.use((req,res,next)=>{
+    req.sign = (res)=>{
+      return  jwt.sign(res,'123456')
+    }
+    next();
+})
+
+// 黑名单机制  指定要检测url
+/*
+app.use((req,res,next)=>{
+  const { url } = req;
+  const blackList = [
+    '/user/update'
+ ]
+  if(blackList.includes(url)){
+     try { 
+          const tk = req.headers.authorization;
+          const decode = jwt.verify(tk,'123456');
+          req.decode = decode;
+          return next();
+      } catch(e) {
+         res.status(401).end();
+        
+     }
+  }
+       
+  next()
+})
+*/
+
+// 白名单机制  指定的url 可以免鉴权
+
+app.use((req,res,next)=>{
+  const whiteList = [
+    '/user/login'
+  ]
+  const { url} = req;
+  if(whiteList.includes(url)) return next();
+
+   try { 
+          const tk = req.headers.authorization;
+          const decode = jwt.verify(tk,'123456');
+          req.decode = decode;
+          return next();
+      } catch(e) {
+          res.status(401).end();
+        
+   }
+
+})
 
 // 建立与数据库的操作
 
@@ -156,6 +212,18 @@ app.get('/other',(req,res)=>{
   res.send('欢迎'+req.session.username+'回来')
 })
 
+
+
+app.post('/genToken',(req,res)=>{
+  const tk = jwt.sign({cunkuan:5000000000},'123456')
+  res.send(tk)  
+  
+})
+app.post('/decodeToken',(req,res)=>{
+  const tk = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjdW5rdWFuIjo1MDAwMDAwMDAwLCJpYXQiOjE2NDU3NTM5MzN9.4kb9cM4pDBe6_WnMFlaER6hn6Ajd8txNh5ycJyeL1xg'
+  const decodeStr = jwt.verify(tk,'12345')
+  res.send(decodeStr)
+})
 
 
 //  让 应用运行在3000端口

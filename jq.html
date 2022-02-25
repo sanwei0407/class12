@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="https://unpkg.com/dayjs@1.8.21/dayjs.min.js"></script>
+
+</head>
+<body>
+
+    <div class="a"></div>
+    <div class="a"></div>
+    <div class="a"></div>
+    <div class="a"></div>
+    <div class="a"></div>
+
+  
+  <script>
+
+    function jq(slts){
+      this.doms = slts;
+     }
+
+    jq.prototype.addClass = function(classname){ 
+        for( const item of this.doms){
+          item.classList.add(classname)
+        }
+    }
+    jq.prototype.removeClass = function (classname) {
+        
+          for (const item of this.doms) {
+            item.classList.remove(classname)
+          }
+    }
+    jq.prototype.height = function(){
+        if(arguments.length === 0 ) {
+           return  window.getComputedStyle(this.doms[0]).height;
+        } else {
+          const height = arguments[0]
+          for (const item of this.doms) {
+            item.style.height = height + 'px'
+          }
+        }
+        
+    }
+
+    function $(slt){
+
+      const  slts = document.querySelectorAll(slt);
+    
+      return  new jq(slts)
+    }
+
+
+
+
+    $(".a").height(800)
+
+
+
+  </script>
+   
+
+    
+
+
+</body>
+</html>
