@@ -145,5 +145,42 @@ router.get('/test',(req,res)=>{
 
 })
 
+router.post('/op',async (req,res)=>{
+  console.log('find here')
+  const { limit = 20,page = 1  } = req.body;
+  const skip = (page-1)*limit;
+
+  const { auid,buid,fee  }  = req.body;
+
+
+  const auser = await User.findById(auid);
+  const buser = await User.findById(buid);
+  
+
+
+  // a用户余额减去转账金额
+
+  // 乐观锁 确保在执行修改的时候 原有的条件不变
+   await User.findOneAndUpdate({_id:auid,balance:auser.balance },{
+    balance: buser.balance + fee
+  })
+
+  await User.findOneAndUpdate({_id:auid,balance:auser.balance },{
+    balance: auser.balance - fee
+  })
+   
+
+
+
+
+  // 查询条件当中会有一些操作符可以选用 eg: $gt $gte ....
+    let _res = await User.count({
+      balance: { $gt:0} 
+    })
+
+
+    res.send({success:true,data:_res })
+})
+
 
 module.exports = router

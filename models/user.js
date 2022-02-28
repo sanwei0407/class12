@@ -10,6 +10,7 @@ var userSchema = mongoose.Schema({
     status: Number, // 1 已注册 为实名认证  2实名认证 正常使用  3已注销
     userName: String, 
     pwd: String,
+    balance: Number // 余额
  
 },{
         timestamps: true // 设置为true会自动的帮我们添加及维护两个字段 createdAt  updatedAt

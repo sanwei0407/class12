@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <!-- 引入socket.io -->
+  <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"
+    integrity="sha384-fKnu0iswBIqkjxrhQCTZ7qlLHOFEgNkRmK2vaO/LbTZSXdJfAu6ewRBdwHPhBo/H" crossorigin="anonymous"></script>
+
+</head>
+<body>
+
+
+  <input type="text" placeholder="请输入用户名" />
+  <button>链接</button>
+
+  <input type="text" id="msg" placeholder="要发送的消息">
+  <button id="send">发送</button>
+
+  <button id="join">加入群里</button>
+  <button id="sendtoroom">发送到群里中</button>
+
+  <input type="text" placeholder="发给谁" id="who">
+  <button id="p2p">发给这个人</button>
+
+  
+  <script>
+
+     document.querySelector('button').addEventListener('click',()=>{
+       const uname = document.querySelector('input').value;
+
+        const sc = io('http://127.0.0.1:3000?uname='+ uname) // 与socket服务进行链接
+       //  sc对象有一个重要的属性  id 是一个与服务端链接后生成的唯一性id
+       //  每次链接 id都会发生变化 scoket的id 是不可靠的
+
+
+        sc.on('connect', () => {
+          console.log('链接成功',sc)
+        })
+
+        sc.on('abcdefg', (res) => {
+          console.log('abcdefg', res)
+        })
+
+        sc.on('newmsg',res=>{
+            console.log('有人发消息来了',res)
+        })
+        const msg = document.getElementById('msg');
+        const sendbtn = document.getElementById('send')
+        sendbtn.onclick = ()=>{
+          // 客户端向socket服务发送信息
+            sc.emit('newmsg',{msg: msg.value })
+        }
+
+
+        //加入聊天室
+        document.getElementById('join').onclick = ()=>{
+          sc.emit('iwant2join')
+        }
+
+        document.getElementById('sendtoroom').onclick =()=>{
+            sc.emit('msg4room', { msg: msg.value })
+        }
+
+
+        document.getElementById('p2p').onclick = ()=>{
+          cosn
+          sc.emit('p2p',{
+            to: document.getElementById('who').value,
+            msg: msg.value
+          })
+        }
+
+        // 请注意 一般需要监听断开 以及 重连
+
+        sc.on('disconnect',()=>{
+          console.log('在socket丢失链接的时候会触发')
+        })
+
+        // 重连的时候会触发
+        sc.on('reconnect', () => {
+          console.log('在socket重新链接触发')
+        })
+
+        
+     })
+
+
+       
+  </script>
+
+</body>
+</html>

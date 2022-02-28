@@ -1,8 +1,17 @@
 const express = require('express') // 引入express
 const nunjucks  = require('nunjucks');
 const path = require('path');
+//  socket引入第一步 引入node自带的http模块的createServer 
+const { createServer } = require("http");
+//  socket引入第二步 通过socket.io引入 Server方法创建socket服务 
+const { Server } = require("socket.io");
 
 const app = express(); //  创建一个express实例
+
+// socket引入第三部  使用原生http模块来驱动web服务
+const httpServer = createServer(app);
+const io = new Server(httpServer, { /* options */ });  // 创建io实例
+
 
 const cors = require('cors') // npm i cors --save
 app.use(cors()) // 解除跨域限制
@@ -42,9 +51,11 @@ app.use((req,res,next)=>{
 
 app.use((req,res,next)=>{
   const whiteList = [
-    '/user/login'
+    '/user/login',
+    '/user/op'
   ]
   const { url} = req;
+  return next();
   if(whiteList.includes(url)) return next();
 
    try { 
@@ -226,7 +237,108 @@ app.post('/decodeToken',(req,res)=>{
 })
 
 
-//  让 应用运行在3000端口
-app.listen(3000,()=>{
+app.post('/testSc',(req,res)=>{
+
+  io.emit('abcdefg',999)
+  res.send('这个是ajax的返回的信息')
+})
+
+
+//  让 应用运行在3000端口 
+// app.listen(3000,()=>{
+//   console.log('app is running at 3000');
+// })
+
+io.on('connect',(socket)=>{
+  // console.log('socket',socket)
+  // 服务端的socket对象重要关注以下一个内容
+  // 得到当前与我链接的socket客户id
+  // console.log('id',socket.id)
+  // sockets得到当前与socket服务器建立链接的全部socket客户 这个sockets是一个MAP对象
+  
+  // console.log('sockets',socket.nsp.sockets)
+
+  // 对于sockets 可以使用 forEach来遍历这个map对象拿出对应的信息（query的参数以及socketid）
+  // socket.nsp.sockets.forEach(item=>{
+  //   console.log('item',item.id)
+  //   console.log('handshake',item.handshake.query)
+  // })
+
+  // 链接的时候传递的参数
+  // console.log('handshake',socket.handshake)
+
+  // 通过socket.on(事件名,函数(客户端传递过来的参数))接受客户端的请求
+  socket.on('newmsg',res=>{
+    console.log('有人发消息过来了',res)
+    
+    //  io.emit(事件名,传递参数) 全体广播
+    // io.emit('newmsg',{
+    //   from: socket.handshake.query.uname,
+    //   time: new Date(),
+    //   ct: res
+    // })
+
+    // socket.emit(事件名,传递参数) 向自己广播
+    socket.emit('newmsg',{
+      from: socket.handshake.query.uname,
+      time: new Date(),
+      ct: res
+    })
+
+  })
+
+  // 监听用户加入到群里的事件
+  socket.on('iwant2join',()=>{
+    // socket.join(房间) 加入到指定的房间
+    socket.join('abc') 
+  })
+
+  // 局部群聊
+  socket.on('msg4room',res=>{
+    console.log('有群聊的消息啦！',res)
+    // io.to(指定房间名).emit 来对房间里面的所有客户进行广播
+    io.to('abc').emit('newmsg',{
+      from: socket.handshake.query.uname,
+      time: new Date(),
+      ct: res,
+      type:'群聊'
+    })
+
+  })
+
+  // p2p 
+  socket.on('p2p',res=>{
+        const { to } = res;
+        // 得到当前的而所有在线用户
+        console.log('p2p reciver')
+        const onlines = [];
+        socket.nsp.sockets.forEach(item=>{
+          onlines.push({
+            uname: item.handshake.query.uname,
+            socketid: item.id
+          })
+        })
+          console.log('p2p onlines',onlines)
+        const touser = onlines.find(item=>item.uname === to);
+          console.log('p2p touser',touser)
+          //  io.to(指定的socketid).emit() 向指定的scoketid客户 广播
+        if(touser) io.to(touser.socketid).emit('newmsg',{
+            from: socket.handshake.query.uname,
+            time: new Date(),
+            ct: res,
+            type:'p2p'
+        })
+  })
+
+
+
+})
+
+
+
+//  引入socket的第四步  使用原生http来监听端口 不在使用原有的app.listen方法
+httpServer.listen(3000,()=>{
   console.log('app is running at 3000');
 })
+
+

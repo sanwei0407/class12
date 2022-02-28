@@ -20,6 +20,7 @@
     "mongoose": "^6.2.3",
     "multer": "^1.4.4",
     "nunjucks": "^3.2.3",
+    "socket.io": "^4.4.1",
     "utility": "^1.17.0"
   }
 }
