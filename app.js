@@ -8,6 +8,31 @@ const { Server } = require("socket.io");
 
 const app = express(); //  创建一个express实例
 
+const multer = require('multer'); // 引入multer 处理formData数据 包括上传图片
+//设置文件上传路径和文件命名
+
+// 为multer之后的存放上传图片 设置一个存储对象（）
+var storage = multer.diskStorage({
+  destination: function (req, file, cb){
+    //文件上传成功后会放入assets下的upload文件夹
+    cb(null, './assets/upload')
+  },
+  filename: function (req, file, cb){
+    //设置文件的名字为其原本的名字，也可以添加其他字符，来区别相同文件，例如file.originalname+new Date().getTime();利用时间来区分
+    
+    const extendName = file.originalname.split('.').pop(); // 获取文件的后缀名
+    const fileName = Date.now() + '.' + extendName;
+    console.log('filename',fileName)
+    cb(null,fileName)
+    // cb(null, file.originalname) //直接使用上传的文件原名保存  不推荐使用
+  }
+});
+
+var upload = multer({
+  storage: storage
+});
+
+
 // socket引入第三部  使用原生http模块来驱动web服务
 const httpServer = createServer(app);
 const io = new Server(httpServer, { /* options */ });  // 创建io实例
@@ -103,7 +128,6 @@ nunjucks.configure('views',{autoescape:true,express:app});
 
 const router = express.Router() // 创建一个Router实例
 const UserRouter = require('./user');
-const req = require('express/lib/request');
 
 // express 当中使用自带的json方法和urlencoded方法来解析body内容
 app.use(express.urlencoded({ extended: false })) // urlencoded
@@ -332,6 +356,19 @@ io.on('connect',(socket)=>{
 
 
 
+})
+
+
+app.post('/profile', upload.single('c'), function (req, res, next) {
+      console.log('req.file',req.file) //得到上传的图片
+      // req.body 可以得到除了文件对象以外的其他的表单值
+      res.send(req.body)
+})
+
+app.post('/bulkUpload', upload.any(),function(req,res,next){
+     console.log('req.file',req.file)
+     console.log('req.files',req.files)
+    res.send(req.body)
 })
 
 
